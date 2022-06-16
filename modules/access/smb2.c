@@ -854,6 +854,14 @@ Open(vlc_object_t *p_obj)
      * keystore/user interaction) */
     vlc_credential_get(&credential, access, "smb-user", "smb-pwd", NULL,
                        NULL);
+    if (vlc_killed())
+    {
+        vlc_credential_clean(&credential);
+        free(resolved_host);
+        ret = -EINTR;
+        goto error;
+
+    }
     ret = vlc_smb2_connect_open_share(access, url, &credential);
 
     while (VLC_SMB2_STATUS_DENIED(ret)
