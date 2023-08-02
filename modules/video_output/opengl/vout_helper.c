@@ -268,24 +268,24 @@ static void getViewpointMatrixes(vout_display_opengl_t *vgl,
                                  video_projection_mode_t projection_mode,
                                  struct prgm *prgm)
 {
-    if (projection_mode == PROJECTION_MODE_EQUIRECTANGULAR
-        || projection_mode == PROJECTION_MODE_CUBEMAP_LAYOUT_STANDARD)
-    {
-        float sar = (float) vgl->f_sar;
-        getProjectionMatrix(sar, vgl->f_fovy, prgm->var.ProjectionMatrix);
-        getYRotMatrix(vgl->f_teta, prgm->var.YRotMatrix);
-        getXRotMatrix(vgl->f_phi, prgm->var.XRotMatrix);
-        getZRotMatrix(vgl->f_roll, prgm->var.ZRotMatrix);
-        getZoomMatrix(vgl->f_z, prgm->var.ZoomMatrix);
-    }
-    else
-    {
+    // if (projection_mode == PROJECTION_MODE_EQUIRECTANGULAR
+    //     || projection_mode == PROJECTION_MODE_CUBEMAP_LAYOUT_STANDARD)
+    // {
+    //     float sar = (float) vgl->f_sar;
+    //     getProjectionMatrix(sar, vgl->f_fovy, prgm->var.ProjectionMatrix);
+    //     getYRotMatrix(vgl->f_teta, prgm->var.YRotMatrix);
+    //     getXRotMatrix(vgl->f_phi, prgm->var.XRotMatrix);
+    //     getZRotMatrix(vgl->f_roll, prgm->var.ZRotMatrix);
+    //     getZoomMatrix(vgl->f_z, prgm->var.ZoomMatrix);
+    // }
+    // else
+    // {
         memcpy(prgm->var.ProjectionMatrix, identity, sizeof(identity));
         memcpy(prgm->var.ZRotMatrix, identity, sizeof(identity));
         memcpy(prgm->var.YRotMatrix, identity, sizeof(identity));
         memcpy(prgm->var.XRotMatrix, identity, sizeof(identity));
         memcpy(prgm->var.ZoomMatrix, identity, sizeof(identity));
-    }
+    // }
 }
 
 static void getOrientationTransformMatrix(video_orientation_t orientation,
@@ -983,8 +983,9 @@ vout_display_opengl_t *vout_display_opengl_New(video_format_t *fmt,
     vgl->region = NULL;
     vgl->pool = NULL;
 
-    if (vgl->fmt.projection_mode != PROJECTION_MODE_RECTANGULAR
-     && vout_display_opengl_SetViewpoint(vgl, viewpoint) != VLC_SUCCESS)
+    // if (vgl->fmt.projection_mode != PROJECTION_MODE_RECTANGULAR
+    //  && vout_display_opengl_SetViewpoint(vgl, viewpoint) != VLC_SUCCESS)
+    if (vout_display_opengl_SetViewpoint(vgl, viewpoint) != VLC_SUCCESS)
     {
         vout_display_opengl_Delete(vgl);
         return NULL;
@@ -1532,25 +1533,32 @@ static int SetupCoords(vout_display_opengl_t *vgl,
     int i_ret;
     switch (vgl->fmt.projection_mode)
     {
+    // case PROJECTION_MODE_RECTANGULAR:
+    //     i_ret = BuildRectangle(vgl->prgm->tc->tex_count,
+    //                            &vertexCoord, &textureCoord, &nbVertices,
+    //                            &indices, &nbIndices,
+    //                            left, top, right, bottom);
+    //     break;
+    // case PROJECTION_MODE_EQUIRECTANGULAR:
+    //     i_ret = BuildSphere(vgl->prgm->tc->tex_count,
+    //                         &vertexCoord, &textureCoord, &nbVertices,
+    //                         &indices, &nbIndices,
+    //                         left, top, right, bottom);
+    //     break;
+    // case PROJECTION_MODE_CUBEMAP_LAYOUT_STANDARD:
+    //     i_ret = BuildCube(vgl->prgm->tc->tex_count,
+    //                       (float)vgl->fmt.i_cubemap_padding / vgl->fmt.i_width,
+    //                       (float)vgl->fmt.i_cubemap_padding / vgl->fmt.i_height,
+    //                       &vertexCoord, &textureCoord, &nbVertices,
+    //                       &indices, &nbIndices,
+    //                       left, top, right, bottom);
+    case PROJECTION_MODE_EQUIRECTANGULAR:
+    case PROJECTION_MODE_CUBEMAP_LAYOUT_STANDARD:
     case PROJECTION_MODE_RECTANGULAR:
         i_ret = BuildRectangle(vgl->prgm->tc->tex_count,
                                &vertexCoord, &textureCoord, &nbVertices,
                                &indices, &nbIndices,
                                left, top, right, bottom);
-        break;
-    case PROJECTION_MODE_EQUIRECTANGULAR:
-        i_ret = BuildSphere(vgl->prgm->tc->tex_count,
-                            &vertexCoord, &textureCoord, &nbVertices,
-                            &indices, &nbIndices,
-                            left, top, right, bottom);
-        break;
-    case PROJECTION_MODE_CUBEMAP_LAYOUT_STANDARD:
-        i_ret = BuildCube(vgl->prgm->tc->tex_count,
-                          (float)vgl->fmt.i_cubemap_padding / vgl->fmt.i_width,
-                          (float)vgl->fmt.i_cubemap_padding / vgl->fmt.i_height,
-                          &vertexCoord, &textureCoord, &nbVertices,
-                          &indices, &nbIndices,
-                          left, top, right, bottom);
         break;
     default:
         i_ret = VLC_EGENERIC;
@@ -1718,7 +1726,7 @@ int vout_display_opengl_Display(vout_display_opengl_t *vgl,
             bottom[j] = (source->i_y_offset + source->i_visible_height) * scale_h;
         }
 
-        TextureCropForStereo(vgl, left, top, right, bottom);
+        //TextureCropForStereo(vgl, left, top, right, bottom);
         int ret = SetupCoords(vgl, left, top, right, bottom);
         if (ret != VLC_SUCCESS)
             return ret;
