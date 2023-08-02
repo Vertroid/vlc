@@ -3256,9 +3256,12 @@ void input_SplitMRL( const char **access, const char **demux,
                      const char **path, const char **anchor, char *buf )
 {
     char *p;
+    char *proc;
 
     /* Separate <path> from <access>[/<demux>]:// */
     p = strstr( buf, "://" );
+    proc = strstr(buf, "smb://");
+    
     if( p != NULL )
     {
         *p = '\0';
@@ -3268,7 +3271,7 @@ void input_SplitMRL( const char **access, const char **demux,
         /* Remove HTML anchor if present (not supported).
          * The hash symbol itself should be URI-encoded. */
         p = strchr( p, '#' );
-        if( p != NULL )
+        if( p != NULL && proc == NULL)
         {
             *(p++) = '\0';
             *anchor = p;

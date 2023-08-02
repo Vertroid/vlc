@@ -690,6 +690,8 @@ vlc_smb2_connect_open_share(stream_t *access, const char *url,
         msg_Err(access, "smb2_init_context failed");
         return -1;
     }
+
+    struct vlc_smb2_op op = VLC_SMB2_OP(access, &sys->smb2);
     smb2_url = smb2_parse_url(sys->smb2, url);
 
     if (!smb2_url || !smb2_url->share || !smb2_url->server)
@@ -737,8 +739,14 @@ vlc_smb2_connect_open_share(stream_t *access, const char *url,
     smb2_set_security_mode(sys->smb2, SMB2_NEGOTIATE_SIGNING_ENABLED);
     smb2_set_password(sys->smb2, password);
     smb2_set_domain(sys->smb2, domain ? domain : "");
+    char *tmp;
+    if(smb2_url->server && (tmp = strchr(smb2_url->server, '@') != NULL)) {
+        free(smb2_url->server);
+        smb2_url->server = strdup(credential->p_url->psz_host);
+    }
 
-    struct vlc_smb2_op op = VLC_SMB2_OP(access, &sys->smb2);
+    msg_Warn(op.log, "smb2_url->user: %s", smb2_url->user);
+    msg_Warn(op.log, "smb2_url->server: %s", smb2_url->server);
     int err = smb2_connect_share_async(sys->smb2, smb2_url->server, share,
                                        username, smb2_generic_cb, &op);
     if (err < 0)
@@ -859,9 +867,16 @@ Open(vlc_object_t *p_obj)
         return VLC_ENOMEM;
     access->p_sys = sys;
 
+    struct vlc_smb2_op op = VLC_SMB2_OP(access, &sys->smb2);
+
     /* Parse the encoded URL */
     if (vlc_UrlParseFixup(&sys->encoded_url, access->psz_url) != 0)
         return VLC_ENOMEM;
+
+    msg_Warn(op.log, "path: %s", sys->encoded_url.psz_path);
+    msg_Warn(op.log, "username: %s", sys->encoded_url.psz_username);
+    msg_Warn(op.log, "password: %s", sys->encoded_url.psz_password);
+    msg_Warn(op.log, "host: %s", sys->encoded_url.psz_host);
 
     if (sys->encoded_url.psz_path == NULL)
         sys->encoded_url.psz_path = (char *) "/";

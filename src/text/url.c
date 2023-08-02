@@ -442,7 +442,8 @@ static int vlc_UrlParseInner(vlc_url_t *restrict url, const char *str)
 
     /* Fragment */
     next = strchr(cur, '#');
-    if (next != NULL)
+
+    if (next != NULL && (strstr(url->psz_protocol, "smb") == NULL))
     {
 #if 0  /* TODO */
        *(next++) = '\0';
@@ -471,6 +472,8 @@ static int vlc_UrlParseInner(vlc_url_t *restrict url, const char *str)
         {
             *next = '\0'; /* temporary nul, reset to slash later */
             url->psz_path = next;
+
+            printf("path: %s", next);
         }
         /*else
             url->psz_path = "/";*/
@@ -481,6 +484,7 @@ static int vlc_UrlParseInner(vlc_url_t *restrict url, const char *str)
         {
             *(next++) = '\0';
             url->psz_username = cur;
+            printf("username: %s", cur);
             cur = next;
 
             /* Password (obsolete) */
@@ -489,6 +493,7 @@ static int vlc_UrlParseInner(vlc_url_t *restrict url, const char *str)
             {
                 *(next++) = '\0';
                 url->psz_password = next;
+                printf("password: %s", next);
                 vlc_uri_decode(url->psz_password);
             }
             vlc_uri_decode(url->psz_username);
@@ -499,6 +504,8 @@ static int vlc_UrlParseInner(vlc_url_t *restrict url, const char *str)
         {   /* Try IPv6 numeral within brackets */
             *(next++) = '\0';
             url->psz_host = strdup(cur + 1);
+
+            printf("host: %s", url->psz_host);
 
             if (*next == ':')
                 next++;
