@@ -651,8 +651,9 @@ static int OpenCommon(vout_display_t *vd)
     /* Fallback to normal projection in case of soft decoding/display (the
      * openGL vout, with a higher priority, should be used when the projection
      * need to be handled). */
-    if (vd->fmt.i_chroma == VLC_CODEC_ANDROID_OPAQUE
-     && vd->fmt.projection_mode != PROJECTION_MODE_RECTANGULAR)
+    // if (vd->fmt.i_chroma == VLC_CODEC_ANDROID_OPAQUE
+    //  && vd->fmt.projection_mode != PROJECTION_MODE_RECTANGULAR)
+    if (vd->fmt.i_chroma == VLC_CODEC_ANDROID_OPAQUE)
         return VLC_EGENERIC;
     vd->fmt.projection_mode = PROJECTION_MODE_RECTANGULAR;
 
@@ -784,9 +785,11 @@ static int OpenOpaque(vlc_object_t *p_this)
 {
     vout_display_t *vd = (vout_display_t*)p_this;
 
+    // if (vd->fmt.i_chroma != VLC_CODEC_ANDROID_OPAQUE
+    //  || vd->fmt.projection_mode != PROJECTION_MODE_RECTANGULAR
+    //  || vd->fmt.orientation != ORIENT_NORMAL)
     if (vd->fmt.i_chroma != VLC_CODEC_ANDROID_OPAQUE
-     || vd->fmt.projection_mode != PROJECTION_MODE_RECTANGULAR
-     || vd->fmt.orientation != ORIENT_NORMAL)
+        || vd->fmt.orientation != ORIENT_NORMAL)
     {
         /* Let the gles2 vout handle orientation and projection */
         return VLC_EGENERIC;
