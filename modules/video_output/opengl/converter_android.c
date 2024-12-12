@@ -27,6 +27,7 @@
 #endif
 
 #include "converter.h"
+#include "../android/shader.h"
 #include "../android/display.h"
 #include "../android/utils.h"
 
@@ -38,6 +39,7 @@ struct priv
 
     struct {
         GLint uSTMatrix;
+        GLint uRenderType;
     } uloc;
 };
 
@@ -164,7 +166,18 @@ tc_anop_fetch_locations(opengl_tex_converter_t *tc, GLuint program)
 {
     struct priv *priv = tc->priv;
     priv->uloc.uSTMatrix = tc->vt->GetUniformLocation(program, "uSTMatrix");
+    priv->uloc.uRenderType = tc->vt->GetUniformLocation(program, "render_type");
     return priv->uloc.uSTMatrix != -1 ? VLC_SUCCESS : VLC_EGENERIC;
+}
+static int
+tc_anop_get_render_type(const opengl_tex_converter_t *tc)
+{
+    if (tc->fmt.transfer == TRANSFER_FUNC_SMPTE_ST2084) {
+        return 1;
+    } else if (tc->fmt.transfer == TRANSFER_FUNC_HLG) {
+        return 2;
+    }
+    return 0;
 }
 
 static void
@@ -174,6 +187,7 @@ tc_anop_prepare_shader(const opengl_tex_converter_t *tc,
 {
     (void) tex_width; (void) tex_height; (void) alpha;
     struct priv *priv = tc->priv;
+    tc->vt->Uniform1i(priv->uloc.uRenderType, tc_anop_get_render_type(tc));
     if (priv->transform_mtx != NULL)
         tc->vt->UniformMatrix4fv(priv->uloc.uSTMatrix, 1, GL_FALSE,
                                   priv->transform_mtx);
@@ -264,7 +278,7 @@ Open(vlc_object_t *obj)
         "}";
 
     char *code;
-    if (asprintf(&code, template, tc->glsl_version, tc->glsl_precision_header) < 0)
+    if (asprintf(&code, "%s", fragment_shader_anop) < 0)
         return 0;
     GLuint fragment_shader = tc->vt->CreateShader(GL_FRAGMENT_SHADER);
     tc->vt->ShaderSource(fragment_shader, 1, (const char **) &code, NULL);
