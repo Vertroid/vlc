@@ -156,6 +156,110 @@ static void get_rotation(es_format_t *fmt, AVStream *s)
     }
 }
 
+static void get_color_primaries(video_format_t *fmt, AVCodecParameters *cp)
+{
+    switch ( cp->color_range )
+    {
+    case AVCOL_RANGE_JPEG:
+        fmt->b_color_range_full = true;
+        break;
+    case AVCOL_RANGE_UNSPECIFIED:
+        fmt->b_color_range_full = !vlc_fourcc_IsYUV( fmt->i_chroma );
+        break;
+    case AVCOL_RANGE_MPEG:
+    default:
+        fmt->b_color_range_full = false;
+        break;
+    }
+
+    switch( cp->color_space )
+    {
+        case AVCOL_SPC_BT709:
+            fmt->space = COLOR_SPACE_BT709;
+            break;
+        case AVCOL_SPC_SMPTE170M:
+        case AVCOL_SPC_BT470BG:
+            fmt->space = COLOR_SPACE_BT601;
+            break;
+        case AVCOL_SPC_BT2020_NCL:
+        case AVCOL_SPC_BT2020_CL:
+            fmt->space = COLOR_SPACE_BT2020;
+            break;
+        default:
+            break;
+    }
+
+    switch( cp->color_trc )
+    {
+        case AVCOL_TRC_LINEAR:
+            fmt->transfer = TRANSFER_FUNC_LINEAR;
+            break;
+        case AVCOL_TRC_GAMMA22:
+            fmt->transfer = TRANSFER_FUNC_SRGB;
+            break;
+        case AVCOL_TRC_BT709:
+            fmt->transfer = TRANSFER_FUNC_BT709;
+            break;
+        case AVCOL_TRC_SMPTE170M:
+        case AVCOL_TRC_BT2020_10:
+        case AVCOL_TRC_BT2020_12:
+            fmt->transfer = TRANSFER_FUNC_BT2020;
+            break;
+#if LIBAVUTIL_VERSION_CHECK( 55, 14, 0, 31, 100)
+        case AVCOL_TRC_ARIB_STD_B67:
+            fmt->transfer = TRANSFER_FUNC_ARIB_B67;
+            break;
+#endif
+#if LIBAVUTIL_VERSION_CHECK( 55, 17, 0, 37, 100)
+        case AVCOL_TRC_SMPTE2084:
+            fmt->transfer = TRANSFER_FUNC_SMPTE_ST2084;
+            break;
+        case AVCOL_TRC_SMPTE240M:
+            fmt->transfer = TRANSFER_FUNC_SMPTE_240;
+            break;
+        case AVCOL_TRC_GAMMA28:
+            fmt->transfer = TRANSFER_FUNC_BT470_BG;
+            break;
+#endif
+        default:
+            break;
+    }
+
+    switch( cp->color_primaries )
+    {
+        case AVCOL_PRI_BT709:
+            fmt->primaries = COLOR_PRIMARIES_BT709;
+            break;
+        case AVCOL_PRI_BT470BG:
+            fmt->primaries = COLOR_PRIMARIES_BT601_625;
+            break;
+        case AVCOL_PRI_SMPTE170M:
+        case AVCOL_PRI_SMPTE240M:
+            fmt->primaries = COLOR_PRIMARIES_BT601_525;
+            break;
+        case AVCOL_PRI_BT2020:
+            fmt->primaries = COLOR_PRIMARIES_BT2020;
+            break;
+        default:
+            break;
+    }
+
+    switch( cp->chroma_location )
+    {
+        case AVCHROMA_LOC_LEFT:
+            fmt->chroma_location = CHROMA_LOCATION_LEFT;
+            break;
+        case AVCHROMA_LOC_CENTER:
+            fmt->chroma_location = CHROMA_LOCATION_CENTER;
+            break;
+        case AVCHROMA_LOC_TOPLEFT:
+            fmt->chroma_location = CHROMA_LOCATION_TOP_LEFT;
+            break;
+        default:
+            break;
+    }
+}
+
 int avformat_OpenDemux( vlc_object_t *p_this )
 {
     demux_t       *p_demux = (demux_t*)p_this;
@@ -447,6 +551,7 @@ int avformat_OpenDemux( vlc_object_t *p_this )
             es_fmt.video.i_visible_height = es_fmt.video.i_height;
 
             get_rotation(&es_fmt, s);
+            get_color_primaries(&es_fmt.video, cp);
 
 # warning FIXME: implement palette transmission
             psz_type = "video";
