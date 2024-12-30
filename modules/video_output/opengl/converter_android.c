@@ -173,9 +173,9 @@ static int
 tc_anop_get_render_type(const opengl_tex_converter_t *tc)
 {
     if (tc->fmt.transfer == TRANSFER_FUNC_SMPTE_ST2084) {
-        return 1;
+        return 6;
     } else if (tc->fmt.transfer == TRANSFER_FUNC_HLG) {
-        return 2;
+        return 7;
     }
     return 0;
 }
