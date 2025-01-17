@@ -746,8 +746,6 @@ vlc_smb2_connect_open_share(stream_t *access, const char *url,
         smb2_url->server = strdup(credential->p_url->psz_host);
     }
 
-    msg_Warn(op.log, "smb2_url->user: %s", smb2_url->user);
-    msg_Warn(op.log, "smb2_url->server: %s", smb2_url->server);
     int err = smb2_connect_share_async(sys->smb2, smb2_url->server, share,
                                        username, smb2_generic_cb, &op);
     if (err < 0)
@@ -868,16 +866,10 @@ Open(vlc_object_t *p_obj)
         return VLC_ENOMEM;
     access->p_sys = sys;
 
-    struct vlc_smb2_op op = VLC_SMB2_OP(access, &sys->smb2);
-
     /* Parse the encoded URL */
     if (vlc_UrlParseFixup(&sys->encoded_url, access->psz_url) != 0)
         return VLC_ENOMEM;
 
-    msg_Warn(op.log, "path: %s", sys->encoded_url.psz_path);
-    msg_Warn(op.log, "username: %s", sys->encoded_url.psz_username);
-    msg_Warn(op.log, "password: %s", sys->encoded_url.psz_password);
-    msg_Warn(op.log, "host: %s", sys->encoded_url.psz_host);
 
     if (sys->encoded_url.psz_path == NULL)
         sys->encoded_url.psz_path = (char *) "/";
